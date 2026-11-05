@@ -45,13 +45,7 @@ jobs:
           cp DEBIAN/control pkg/DEBIAN/control
           cp DEBIAN/postinst pkg/DEBIAN/postinst
           chmod 755 pkg/DEBIAN/postinst pkg/usr/local/bin/dumpbox
-          cd pkg
-          tar --format=gnutar -czf ../data.tar.gz Applications usr
-          tar -czf ../control.tar.gz DEBIAN
-          echo "2.0" > ../debian-binary
-          cd ..
-          xcrun llvm-ar --format=gnu rcs dist/DumpBox.deb debian-binary control.tar.gz data.tar.gz
-          rm -f data.tar.gz control.tar.gz debian-binary
+          python3 .github/makedeb.py pkg dist/DumpBox.deb
           ls -lh dist/
 
       - name: Release
