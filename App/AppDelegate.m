@@ -152,15 +152,24 @@ static NSArray *InstalledApps(void) {
     vc.logText = [startMsg stringByAppendingString:@"已提交到 root 队列，等待执行...\n"];
     vc.textView.text = vc.logText;
 
+    NSString *resultPath = @"/var/mobile/Documents/DumpBox/result";
+    NSString *plistPath = @"/var/mobile/Library/Preferences/com.dumpbox.app.plist";
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         NSString *latest = vc.logText;
-        CFStringRef appID = CFSTR("com.dumpbox.app");
         for (int i = 0; i < 600; i++) {
-            CFPreferencesAppSynchronize(appID);
-            CFStringRef statusRef = CFPreferencesCopyAppValue(CFSTR("status"), appID);
-            CFStringRef resultRef = CFPreferencesCopyAppValue(CFSTR("result"), appID);
-            NSString *status = statusRef ? (__bridge_transfer NSString *)statusRef : @"";
-            NSString *result = resultRef ? (__bridge_transfer NSString *)resultRef : @"";
+            NSString *status = @"";
+            NSString *result = [NSString stringWithContentsOfFile:resultPath
+                                                         encoding:NSUTF8StringEncoding
+                                                            error:nil];
+            if (!result.length) {
+                NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+                if (d) {
+                    status = [d[@"status"] description] ?: @"";
+                    result = [d[@"result"] description] ?: @"";
+                }
+            } else {
+                status = [result rangeOfString:@"DONE"].location != NSNotFound ? @"DONE" : @"RUNNING";
+            }
             if (result.length) {
                 latest = result;
                 if (i % 3 == 0 || [status isEqualToString:@"DONE"]) {

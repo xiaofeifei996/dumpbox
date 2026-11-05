@@ -9,6 +9,9 @@ while true; do
     if [ -n "$BID" ] && [ "$STATUS" != "DONE" ] && [ "$STATUS" != "RUNNING" ]; then
       plutil -key status -value "RUNNING" "$PLIST" >/dev/null 2>&1 || true
       OUT=$(/usr/local/bin/dumpbox "$BID" 2>&1)
+      mkdir -p /var/mobile/Documents/DumpBox
+      printf '%s' "$OUT" > /var/mobile/Documents/DumpBox/result
+      chmod 666 /var/mobile/Documents/DumpBox/result 2>/dev/null || true
       plutil -key result -value "$OUT" "$PLIST" >/dev/null 2>&1 || true
       plutil -key status -value "DONE" "$PLIST" >/dev/null 2>&1 || true
     fi
