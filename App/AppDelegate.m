@@ -161,12 +161,12 @@ static NSArray *InstalledApps(void) {
             NSString *s = [NSString stringWithContentsOfFile:res encoding:NSUTF8StringEncoding error:nil];
             if (s.length) {
                 latest = s;
-                if (i % 3 == 0 || [s rangeOfString:@"DONE"] != NSNotFound) {
+                if (i % 3 == 0 || [s rangeOfString:@"DONE"].location != NSNotFound) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         vc.textView.text = latest;
                     });
                 }
-                if ([s rangeOfString:@"DONE"] != NSNotFound) break;
+                if ([s rangeOfString:@"DONE"].location != NSNotFound) break;
             }
             sleep(1);
         }
