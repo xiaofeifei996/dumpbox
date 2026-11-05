@@ -4,16 +4,13 @@ PLIST=/var/mobile/Library/Preferences/com.dumpbox.app.plist
 
 while true; do
   if [ -f "$PLIST" ]; then
-    BID=$(plutil -extract request raw "$PLIST" 2>/dev/null)
-    STATUS=$(plutil -extract status raw "$PLIST" 2>/dev/null)
+    BID=$(plutil -key request "$PLIST" 2>/dev/null | head -1 | tr -d '\r\n')
+    STATUS=$(plutil -key status "$PLIST" 2>/dev/null | head -1 | tr -d '\r\n')
     if [ -n "$BID" ] && [ "$STATUS" != "DONE" ] && [ "$STATUS" != "RUNNING" ]; then
-      plutil -replace status -string "RUNNING" "$PLIST" 2>/dev/null || \
-        plutil -insert status -string "RUNNING" "$PLIST" 2>/dev/null || true
+      plutil -key status -value "RUNNING" "$PLIST" >/dev/null 2>&1 || true
       OUT=$(/usr/local/bin/dumpbox "$BID" 2>&1)
-      plutil -replace result -string "$OUT" "$PLIST" 2>/dev/null || \
-        plutil -insert result -string "$OUT" "$PLIST" 2>/dev/null || true
-      plutil -replace status -string "DONE" "$PLIST" 2>/dev/null || \
-        plutil -insert status -string "DONE" "$PLIST" 2>/dev/null || true
+      plutil -key result -value "$OUT" "$PLIST" >/dev/null 2>&1 || true
+      plutil -key status -value "DONE" "$PLIST" >/dev/null 2>&1 || true
     fi
   fi
   sleep 1
