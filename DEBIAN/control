@@ -1,7 +1,7 @@
 Package: com.dumpbox.app
 Name: DumpBox
 Version: 1.0.0
-Architecture: iphoneos-arm64
+Architecture: iphoneos-arm64e
 Description: 一键砸壳工具：注入目标 App 读取解密内存并导出 IPA
 Maintainer: xiaofeifei996
 Author: xiaofeifei996

@@ -50,7 +50,7 @@ jobs:
           tar -czf ../control.tar.gz DEBIAN
           echo "2.0" > ../debian-binary
           cd ..
-          ar rcs dist/DumpBox.deb debian-binary control.tar.gz data.tar.gz
+          xcrun llvm-ar --format=gnu rcs dist/DumpBox.deb debian-binary control.tar.gz data.tar.gz
           rm -f data.tar.gz control.tar.gz debian-binary
           ls -lh dist/
 
