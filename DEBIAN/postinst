@@ -1,0 +1,17 @@
+#!/bin/bash
+chmod 755 /usr/local/bin/dumpbox 2>/dev/null
+chmod 755 /usr/local/share/DumpBox.dylib 2>/dev/null
+chmod 755 /Applications/DumpBox.app/DumpBox 2>/dev/null
+
+if command -v ldid2 >/dev/null 2>&1; then
+  ldid2 -S /Applications/DumpBox.app/DumpBox 2>/dev/null || true
+  ldid2 -S /usr/local/share/DumpBox.dylib 2>/dev/null || true
+fi
+
+if command -v uicache >/dev/null 2>&1; then
+  uicache -p /Applications/DumpBox.app 2>/dev/null || true
+fi
+
+echo "DumpBox installed."
+echo "GUI: DumpBox app   CLI: sudo dumpbox <bundle-id>"
+exit 0
