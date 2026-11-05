@@ -133,36 +133,45 @@ static NSArray *InstalledApps(void) {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     NSDictionary *app = self.apps[indexPath.row];
-
-    UIAlertController *alert = [UIAlertController
-        alertControllerWithTitle:@"sudo 密码"
-                         message:[NSString stringWithFormat:@"砸壳 %@", app[@"name"]]
-                  preferredStyle:UIAlertControllerStyleAlert];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"root 密码";
-        tf.secureTextEntry = YES;
-        tf.text = @"alpine";
-    }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"开始" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
-        NSString *pw = alert.textFields.firstObject.text ?: @"";
-        [self runDump:app[@"bid"] password:pw];
-    }]];
-    [self presentViewController:alert animated:YES completion:nil];
+    [self runDump:app[@"bid"]];
 }
 
-- (void)runDump:(NSString *)bid password:(NSString *)pw {
+- (void)runDump:(NSString *)bid {
     LogViewController *vc = [[LogViewController alloc] init];
     vc.title = bid;
-    vc.logText = [NSString stringWithFormat:@"开始砸壳 %@\n\n", bid];
+    NSString *startMsg = [NSString stringWithFormat:@"开始砸壳 %@\n\n", bid];
+    vc.logText = startMsg;
     [self.navigationController pushViewController:vc animated:YES];
 
+    NSString *dir = @"/var/mobile/Documents/DumpBox";
+    NSFileManager *fm = [NSFileManager defaultManager];
+    [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+    NSString *req = [dir stringByAppendingPathComponent:@"request"];
+    NSString *res = [dir stringByAppendingPathComponent:@"result"];
+
+    [fm removeItemAtPath:res error:nil];
+    [bid writeToFile:req atomically:YES encoding:NSUTF8StringEncoding error:nil];
+
+    vc.logText = [startMsg stringByAppendingString:@"已提交到 root 队列，等待执行...\n"];
+    vc.textView.text = vc.logText;
+
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        NSString *cmd = [NSString stringWithFormat:@"/usr/local/bin/dumpbox %@", bid];
-        NSString *output = RunCommand(cmd, pw);
+        NSString *latest = vc.logText;
+        for (int i = 0; i < 600; i++) {
+            NSString *s = [NSString stringWithContentsOfFile:res encoding:NSUTF8StringEncoding error:nil];
+            if (s.length) {
+                latest = s;
+                if (i % 3 == 0 || [s rangeOfString:@"DONE"] != NSNotFound) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        vc.textView.text = latest;
+                    });
+                }
+                if ([s rangeOfString:@"DONE"] != NSNotFound) break;
+            }
+            sleep(1);
+        }
         dispatch_async(dispatch_get_main_queue(), ^{
-            vc.logText = output;
-            vc.textView.text = output;
+            vc.textView.text = latest;
         });
     });
 }

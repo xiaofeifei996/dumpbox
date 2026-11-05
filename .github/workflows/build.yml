@@ -38,14 +38,17 @@ jobs:
 
       - name: Package deb
         run: |
-          mkdir -p pkg/DEBIAN pkg/Applications pkg/usr/local/bin pkg/usr/local/share
+          mkdir -p pkg/DEBIAN pkg/Applications pkg/usr/local/bin pkg/usr/local/share pkg/Library/LaunchDaemons
           cp -a dist/DumpBox.app pkg/Applications/
           cp helper/dumpbox.sh pkg/usr/local/bin/dumpbox
+          cp helper/dumpboxd.sh pkg/usr/local/bin/dumpboxd
+          cp helper/com.dumpbox.daemon.plist pkg/Library/LaunchDaemons/
           cp dist/DumpBox.dylib pkg/usr/local/share/
           cp DEBIAN/control pkg/DEBIAN/control
           cp DEBIAN/postinst pkg/DEBIAN/postinst
           cp App/DumpBox.entitlements pkg/usr/local/share/DumpBox.entitlements
-          chmod 755 pkg/DEBIAN/postinst pkg/usr/local/bin/dumpbox
+          chmod 755 pkg/DEBIAN/postinst pkg/usr/local/bin/dumpbox pkg/usr/local/bin/dumpboxd
+          chmod 644 pkg/Library/LaunchDaemons/com.dumpbox.daemon.plist
           python3 .github/makedeb.py pkg dist/DumpBox.deb
           ls -lh dist/
 
