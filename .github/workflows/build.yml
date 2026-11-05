@@ -1,0 +1,61 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "SDK=$SDK"
+          mkdir -p dist
+          clang -target arm64-apple-ios15.0 -isysroot "$SDK" -dynamiclib -O2 \
+            -fobjc-arc -o dist/DumpBox.dylib dylib/DumpBox.m -framework Foundation
+          codesign -s - --force dist/DumpBox.dylib || true
+          file dist/DumpBox.dylib
+
+      - name: Build app
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          mkdir -p dist/DumpBox.app
+          clang -target arm64-apple-ios15.0 -isysroot "$SDK" -fobjc-arc -O2 \
+            -Wno-arc-performSelector-leaks \
+            -framework UIKit -framework Foundation \
+            -o dist/DumpBox.app/DumpBox App/main.m App/AppDelegate.m
+          cp App/Info.plist dist/DumpBox.app/Info.plist
+          codesign -s - --force --entitlements App/DumpBox.entitlements dist/DumpBox.app || true
+          file dist/DumpBox.app/DumpBox
+
+      - name: Package deb
+        run: |
+          mkdir -p pkg/DEBIAN pkg/Applications pkg/usr/local/bin pkg/usr/local/share
+          cp -a dist/DumpBox.app pkg/Applications/
+          cp helper/dumpbox.sh pkg/usr/local/bin/dumpbox
+          cp dist/DumpBox.dylib pkg/usr/local/share/
+          cp DEBIAN/control pkg/DEBIAN/control
+          cp DEBIAN/postinst pkg/DEBIAN/postinst
+          chmod 755 pkg/DEBIAN/postinst pkg/usr/local/bin/dumpbox
+          cd pkg
+          tar --format=gnutar -czf ../data.tar.gz Applications usr
+          tar -czf ../control.tar.gz DEBIAN
+          echo "2.0" > ../debian-binary
+          cd ..
+          ar rcs dist/DumpBox.deb debian-binary control.tar.gz data.tar.gz
+          rm -f data.tar.gz control.tar.gz debian-binary
+          ls -lh dist/
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-${{ github.run_number }}
+          files: dist/*
