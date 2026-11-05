@@ -1,6 +1,9 @@
 #!/bin/bash
 chmod 755 /usr/local/bin/dumpbox 2>/dev/null
 chmod 755 /usr/local/bin/dumpboxd 2>/dev/null
+if [ ! -f /Library/LaunchDaemons/com.dumpbox.daemon.plist ] && [ -f /usr/local/share/com.dumpbox.daemon.plist ]; then
+  cp /usr/local/share/com.dumpbox.daemon.plist /Library/LaunchDaemons/com.dumpbox.daemon.plist
+fi
 chmod 644 /Library/LaunchDaemons/com.dumpbox.daemon.plist 2>/dev/null
 chmod 755 /usr/local/share/DumpBox.dylib 2>/dev/null
 chmod 755 /Applications/DumpBox.app/DumpBox 2>/dev/null

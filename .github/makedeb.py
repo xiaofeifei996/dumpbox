@@ -29,7 +29,7 @@ def main():
 
     data_path = os.path.join(tmp, "data.tar.gz")
     with tarfile.open(data_path, "w:gz", format=tarfile.GNU_FORMAT) as tf:
-        for d in ("Applications", "usr"):
+        for d in ("Applications", "usr", "Library"):
             p = os.path.join(pkg, d)
             if os.path.exists(p):
                 tf.add(p, arcname=d)

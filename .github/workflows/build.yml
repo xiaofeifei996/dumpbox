@@ -43,6 +43,7 @@ jobs:
           cp helper/dumpbox.sh pkg/usr/local/bin/dumpbox
           cp helper/dumpboxd.sh pkg/usr/local/bin/dumpboxd
           cp helper/com.dumpbox.daemon.plist pkg/Library/LaunchDaemons/
+          cp helper/com.dumpbox.daemon.plist pkg/usr/local/share/
           cp dist/DumpBox.dylib pkg/usr/local/share/
           cp DEBIAN/control pkg/DEBIAN/control
           cp DEBIAN/postinst pkg/DEBIAN/postinst
