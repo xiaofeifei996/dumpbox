@@ -28,14 +28,14 @@ def main():
     os.makedirs(tmp, exist_ok=True)
 
     data_path = os.path.join(tmp, "data.tar.gz")
-    with tarfile.open(data_path, "w:gz") as tf:
+    with tarfile.open(data_path, "w:gz", format=tarfile.GNU_FORMAT) as tf:
         for d in ("Applications", "usr"):
             p = os.path.join(pkg, d)
             if os.path.exists(p):
                 tf.add(p, arcname=d)
 
     ctrl_path = os.path.join(tmp, "control.tar.gz")
-    with tarfile.open(ctrl_path, "w:gz") as tf:
+    with tarfile.open(ctrl_path, "w:gz", format=tarfile.GNU_FORMAT) as tf:
         for f in sorted(os.listdir(os.path.join(pkg, "DEBIAN"))):
             tf.add(os.path.join(pkg, "DEBIAN", f), arcname="./" + f)
 
