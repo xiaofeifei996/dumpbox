@@ -4,7 +4,12 @@ chmod 755 /usr/local/share/DumpBox.dylib 2>/dev/null
 chmod 755 /Applications/DumpBox.app/DumpBox 2>/dev/null
 
 if command -v ldid2 >/dev/null 2>&1; then
-  ldid2 -S /Applications/DumpBox.app/DumpBox 2>/dev/null || true
+  ENT=/usr/local/share/DumpBox.entitlements
+  if [ -f "$ENT" ]; then
+    ldid2 -S"$ENT" /Applications/DumpBox.app/DumpBox 2>/dev/null || true
+  else
+    ldid2 -S /Applications/DumpBox.app/DumpBox 2>/dev/null || true
+  fi
   ldid2 -S /usr/local/share/DumpBox.dylib 2>/dev/null || true
 fi
 

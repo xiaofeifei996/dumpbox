@@ -44,6 +44,7 @@ jobs:
           cp dist/DumpBox.dylib pkg/usr/local/share/
           cp DEBIAN/control pkg/DEBIAN/control
           cp DEBIAN/postinst pkg/DEBIAN/postinst
+          cp App/DumpBox.entitlements pkg/usr/local/share/DumpBox.entitlements
           chmod 755 pkg/DEBIAN/postinst pkg/usr/local/bin/dumpbox
           python3 .github/makedeb.py pkg dist/DumpBox.deb
           ls -lh dist/
