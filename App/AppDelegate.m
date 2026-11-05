@@ -152,12 +152,13 @@ static NSArray *InstalledApps(void) {
     vc.logText = [startMsg stringByAppendingString:@"已提交到 root 队列，等待执行...\n"];
     vc.textView.text = vc.logText;
 
+    NSString *plistPath = @"/var/mobile/Library/Preferences/com.dumpbox.app.plist";
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         NSString *latest = vc.logText;
         for (int i = 0; i < 600; i++) {
-            [ud synchronize];
-            NSString *status = [ud stringForKey:@"status"];
-            NSString *result = [ud stringForKey:@"result"];
+            NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+            NSString *status = [d[@"status"] description];
+            NSString *result = [d[@"result"] description];
             if (result.length) {
                 latest = result;
                 if (i % 3 == 0 || [status isEqualToString:@"DONE"]) {
