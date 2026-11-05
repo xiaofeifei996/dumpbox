@@ -1,21 +1,20 @@
 #!/bin/bash
-# dumpboxd: root queue worker for DumpBox.app
-DIR=/var/mobile/Documents/DumpBox
-mkdir -p "$DIR"
-chown mobile:mobile "$DIR" 2>/dev/null || true
+# dumpboxd: root queue worker, talks to DumpBox.app via NSUserDefaults plist.
+PLIST=/var/mobile/Library/Preferences/com.dumpbox.app.plist
 
 while true; do
-  if [ -f "$DIR/request" ]; then
-    BID=$(cat "$DIR/request" 2>/dev/null | tr -d '\r\n')
-    rm -f "$DIR/request"
-    : > "$DIR/result"
-    chmod 666 "$DIR/result" 2>/dev/null || true
-    if [ -n "$BID" ]; then
-      /usr/local/bin/dumpbox "$BID" >> "$DIR/result" 2>&1
-    else
-      echo "ERROR: empty request" >> "$DIR/result"
+  if [ -f "$PLIST" ]; then
+    BID=$(plutil -extract request raw "$PLIST" 2>/dev/null)
+    STATUS=$(plutil -extract status raw "$PLIST" 2>/dev/null)
+    if [ -n "$BID" ] && [ "$STATUS" != "DONE" ] && [ "$STATUS" != "RUNNING" ]; then
+      plutil -replace status -string "RUNNING" "$PLIST" 2>/dev/null || \
+        plutil -insert status -string "RUNNING" "$PLIST" 2>/dev/null || true
+      OUT=$(/usr/local/bin/dumpbox "$BID" 2>&1)
+      plutil -replace result -string "$OUT" "$PLIST" 2>/dev/null || \
+        plutil -insert result -string "$OUT" "$PLIST" 2>/dev/null || true
+      plutil -replace status -string "DONE" "$PLIST" 2>/dev/null || \
+        plutil -insert status -string "DONE" "$PLIST" 2>/dev/null || true
     fi
-    echo "DONE" >> "$DIR/result"
   fi
   sleep 1
 done

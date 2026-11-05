@@ -143,14 +143,11 @@ static NSArray *InstalledApps(void) {
     vc.logText = startMsg;
     [self.navigationController pushViewController:vc animated:YES];
 
-    NSString *dir = @"/var/mobile/Documents/DumpBox";
-    NSFileManager *fm = [NSFileManager defaultManager];
-    [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
-    NSString *req = [dir stringByAppendingPathComponent:@"request"];
-    NSString *res = [dir stringByAppendingPathComponent:@"result"];
-
-    [fm removeItemAtPath:res error:nil];
-    [bid writeToFile:req atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    [ud setObject:@"" forKey:@"result"];
+    [ud setObject:@"NEW" forKey:@"status"];
+    [ud setObject:bid forKey:@"request"];
+    [ud synchronize];
 
     vc.logText = [startMsg stringByAppendingString:@"已提交到 root 队列，等待执行...\n"];
     vc.textView.text = vc.logText;
@@ -158,16 +155,18 @@ static NSArray *InstalledApps(void) {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         NSString *latest = vc.logText;
         for (int i = 0; i < 600; i++) {
-            NSString *s = [NSString stringWithContentsOfFile:res encoding:NSUTF8StringEncoding error:nil];
-            if (s.length) {
-                latest = s;
-                if (i % 3 == 0 || [s rangeOfString:@"DONE"].location != NSNotFound) {
+            [ud synchronize];
+            NSString *status = [ud stringForKey:@"status"];
+            NSString *result = [ud stringForKey:@"result"];
+            if (result.length) {
+                latest = result;
+                if (i % 3 == 0 || [status isEqualToString:@"DONE"]) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         vc.textView.text = latest;
                     });
                 }
-                if ([s rangeOfString:@"DONE"].location != NSNotFound) break;
             }
+            if ([status isEqualToString:@"DONE"]) break;
             sleep(1);
         }
         dispatch_async(dispatch_get_main_queue(), ^{
