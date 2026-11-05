@@ -36,7 +36,8 @@ def main():
 
     ctrl_path = os.path.join(tmp, "control.tar.gz")
     with tarfile.open(ctrl_path, "w:gz") as tf:
-        tf.add(os.path.join(pkg, "DEBIAN"), arcname="DEBIAN")
+        for f in sorted(os.listdir(os.path.join(pkg, "DEBIAN"))):
+            tf.add(os.path.join(pkg, "DEBIAN", f), arcname="./" + f)
 
     entries = [
         ("debian-binary", b"2.0\n"),
